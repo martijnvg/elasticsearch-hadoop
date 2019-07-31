@@ -104,6 +104,10 @@ public class NetworkClient implements StatsAware, Closeable {
     }
 
     public Response execute(Request request) {
+        return execute(request, true);
+    }
+
+    public Response execute(Request request, boolean retry) {
         Response response = null;
 
         boolean newNode;
@@ -118,6 +122,7 @@ public class NetworkClient implements StatsAware, Closeable {
                     stats.bytesSent += body.length();
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
                 // configuration error - including SSL/PKI - bail out
                 if (ex instanceof EsHadoopIllegalStateException) {
                     throw (EsHadoopException) ex;
@@ -131,16 +136,21 @@ public class NetworkClient implements StatsAware, Closeable {
                     throw new EsHadoopTransportException(ex);
                 }
 
+                String failed = currentNode;
+
+                failedNodes.put(failed, ex);
+
+                if (retry == false) {
+                    log.error(String.format("Node [%s] failed (%s); Retrying has been disabled. Aborting...", failed, ex.getMessage()));
+                    throw new RuntimeException(ex);
+                }
+
                 if (log.isTraceEnabled()) {
                     log.trace(
                             String.format(
                                     "Caught exception while performing request [%s][%s] - falling back to the next node in line...",
                                     currentNode, request.path()), ex);
                 }
-
-                String failed = currentNode;
-
-                failedNodes.put(failed, ex);
 
                 newNode = selectNextNode();
 

@@ -90,6 +90,31 @@ public class AbstractJavaEsSparkSQLTest implements Serializable {
 	}
 
 	@Test
+	public void test() throws Exception {
+        Dataset<Row> dataset = artistsAsDataset();
+
+        String target = resource("sparksql-test-scala-basic-write", "data", version);
+        JavaEsSparkSQL.saveToEs(dataset, target);
+        assertTrue(RestUtils.exists(target));
+        assertThat(RestUtils.get(target + "/_search?"), containsString("345"));
+
+        dataset = sqc.read().format("es").load(target);
+        assertThat(dataset.count(), equalTo(345L));
+        String schema = dataset.schema().treeString();
+        System.out.println(schema);
+        assertTrue(schema.contains("id: long"));
+        assertTrue(schema.contains("name: string"));
+        assertTrue(schema.contains("pictures: string"));
+        assertTrue(schema.contains("time: long"));
+        assertTrue(schema.contains("url: string"));
+
+        dataset.registerTempTable("basicRead");
+        Dataset<Row> nameRDD = sqc
+                .sql("SELECT name FROM basicRead WHERE id >= 1 AND id <=10");
+        assertThat(nameRDD.count(), equalTo(10L));
+    }
+
+	@Test
 	public void testBasicRead() throws Exception {
         Dataset<Row> dataset = artistsAsDataset();
         assertTrue(dataset.count() > 300);

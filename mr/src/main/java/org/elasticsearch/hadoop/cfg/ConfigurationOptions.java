@@ -103,7 +103,7 @@ public interface ConfigurationOptions {
 
     /** HTTP connection timeout */
     String ES_HTTP_TIMEOUT = "es.http.timeout";
-    String ES_HTTP_TIMEOUT_DEFAULT = "1m";
+    String ES_HTTP_TIMEOUT_DEFAULT = "20s";
 
     String ES_HTTP_RETRIES = "es.http.retries";
     String ES_HTTP_RETRIES_DEFAULT = "3";
@@ -114,7 +114,7 @@ public interface ConfigurationOptions {
 
     /** Scroll size */
     String ES_SCROLL_SIZE = "es.scroll.size";
-    String ES_SCROLL_SIZE_DEFAULT = "50";
+    String ES_SCROLL_SIZE_DEFAULT = "2";
 
     /** Scroll limit */
     String ES_SCROLL_LIMIT = "es.scroll.limit";
